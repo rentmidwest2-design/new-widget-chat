@@ -1,54 +1,39 @@
 (function () {
-  // =========================================================
-  // Midwest Universal Tours (Agent + Self) + Property Chat Init
-  // - Detects site by hostname
-  // - Renders TWO buttons left of chat (no background)
-  // - Optionally initializes MyShowing Chat per property (safe)
-  // =========================================================
-
+  // ===== Property map (9 sites) =====
   const CONFIG = {
     "ascotarms.prospectportal.com": {
-      chatId: "a000H00000qFh1NQAS",
       selfUrl: "https://prop.peek.us/659c209ccdaa2af31fe90c5e/self-guided-tour/",
       agentUrl: "https://www.myshowing.com/Midwest_Property_Management/Ascot_Arms_(Empire_Park)/scheduletourwidget/a0F0H00000d3i9sUAA"
     },
     "cambriancourt.prospectportal.com": {
-      chatId: "a000H00000qFh1QQAS",
       selfUrl: "https://prop.peek.us/66aaaa33f7d05462a7f4be8e/self-guided-tour/",
       agentUrl: "https://www.myshowing.com/Midwest_Property_Management/Cambrian_Court_(Cambrian_Heights)/scheduletourwidget/a0F0H00000d3i9vUAA/"
     },
     "cricketcourt.prospectportal.com": {
-      chatId: "a000H00000qFh1WQAS",
       selfUrl: "https://prop.peek.us/668c76b1edee275669b4508d/self-guided-tour/",
       agentUrl: "https://www.myshowing.com/Midwest_Property_Management/Cricket_Court_Townhomes_(Aldergrove)/scheduletourwidget/a0F0H00000d3iA1UAI/"
     },
     "elmwoodtownhomes.prospectportal.com": {
-      chatId: "a000H00000qFh1aQAC",
       selfUrl: "https://prop.peek.us/668c766ffa52e0189568d9a9/self-guided-tour/",
       agentUrl: "https://www.myshowing.com/Midwest_Property_Management/Elmwood_Townhomes_(Elmwood)/scheduletourwidget/a0F0H00000d3iA5UAI/"
     },
     "empirepark.prospectportal.com": {
-      chatId: "a000H00000qFh1bQAC",
       selfUrl: "https://prop.peek.us/659c20d06dc4272dc1c6fe18/self-guided-tour/",
       agentUrl: "https://www.myshowing.com/Midwest_Property_Management/Empire_Park_(Empire_Park)/scheduletourwidget/a0F0H00000d3iA6UAI/"
     },
     "pleasantviewtownhomes.prospectportal.com": {
-      chatId: "a000H00000qFh1nQAC",
       selfUrl: "https://prop.peek.us/668c75b7bbe11732e731384f/self-guided-tour/",
       agentUrl: "https://www.myshowing.com/Midwest_Property_Management/Pleasantview_Townhomes_(Empire_Park)/scheduletourwidget/a0F0H00000d3iAIUAY"
     },
     "rivervalleytownhomes.prospectportal.com": {
-      chatId: "a000H00000qFh1pQAC",
       selfUrl: "https://prop.peek.us/66350d825cb18b6935f276b2/self-guided-tour/",
       agentUrl: "https://www.myshowing.com/Midwest_Property_Management/Rivervalley_Townhomes_(Gold_Bar)/scheduletourwidget/a0F0H00000d3iAKUAY/"
     },
     "sirjohnfranklin.prospectportal.com": {
-      chatId: "a000H00000qFh1rQAC",
       selfUrl: "https://prop.peek.us/66350e28f4dbddfd2b19646a/self-guided-tour/",
       agentUrl: "https://www.myshowing.com/Midwest_Property_Management/Sir_John_Franklin_(Old_Strathcona)/scheduletourwidget/a0F0H00000d3iAMUAY"
     },
     "thevillageatsouthgate.prospectportal.com": {
-      chatId: "a000H00000qFh1uQAC",
       selfUrl: "https://prop.peek.us/66350d32f4dbddfd2b1863d7/self-guided-tour/",
       agentUrl: "https://www.myshowing.com/Midwest_Property_Management/The_Village_at_Southgate_(Southgate)/scheduletourwidget/a0F0H00000d3iAPUAY/"
     }
@@ -58,9 +43,8 @@
   const cfg = CONFIG[host];
   if (!cfg) return;
 
-  // Prevent duplicates on SPA-ish Entrata pages
-  if (window.__MPM_TOURS_BOOTED__) return;
-  window.__MPM_TOURS_BOOTED__ = true;
+  if (window.__MPM_TOURS_LOADED__) return;
+  window.__MPM_TOURS_LOADED__ = true;
 
   function onReady(fn) {
     if (document.readyState === "complete" || document.readyState === "interactive") fn();
@@ -69,7 +53,6 @@
 
   function injectStyles() {
     if (document.getElementById("mpm-tour-styles")) return;
-
     const style = document.createElement("style");
     style.id = "mpm-tour-styles";
     style.textContent = `
@@ -106,13 +89,13 @@
       }
 
       .mpm-tour-btn svg{
-        width: 56%;
-        height: 56%;
+        width: 60%;
+        height: 60%;
         fill: #fff;
         display: block;
       }
 
-      .mpm-lock-wrap{ position: relative; width:56%; height:56%; }
+      .mpm-lock-wrap{ position: relative; width:60%; height:60%; }
       .mpm-lock-wrap svg{
         position:absolute; inset:0; width:100%; height:100%;
         fill:#fff; transition: opacity .18s ease, transform .18s ease;
@@ -135,7 +118,7 @@
       }
 
       @media (prefers-reduced-motion: reduce){
-        .mpm-lock-wrap svg{ transition: none !important; }
+        .mpm-lock-wrap svg{ transition:none !important; }
       }
     `;
     document.head.appendChild(style);
@@ -171,50 +154,8 @@
     document.body.appendChild(dock);
   }
 
-  // OPTIONAL: Only enable if you want ONE universal chat init (instead of per-site embeds)
-  function initChatOptional() {
-    // Comment this entire function call out if you already embed chat per property
-    const cssHref = "https://www.myshowing.com/css/conciergeplugin.css";
-    const jsSrc = "https://www.myshowing.com/js/concierge/conciergeplugin.js";
-
-    if (!document.querySelector(`link[href="${cssHref}"]`)) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = cssHref;
-      document.head.appendChild(link);
-    }
-
-    function initWhenReady() {
-      let tries = 0;
-      const t = setInterval(() => {
-        tries++;
-        if (window.conciergePlugin && typeof window.conciergePlugin.init === "function") {
-          clearInterval(t);
-          try { window.conciergePlugin.init(cfg.chatId); } catch (e) {}
-        }
-        if (tries > 80) clearInterval(t);
-      }, 250);
-    }
-
-    if (window.conciergePlugin && typeof window.conciergePlugin.init === "function") {
-      initWhenReady();
-      return;
-    }
-
-    if (!document.querySelector(`script[src="${jsSrc}"]`)) {
-      const s = document.createElement("script");
-      s.src = jsSrc;
-      s.async = true;
-      s.onload = initWhenReady;
-      document.head.appendChild(s);
-    } else {
-      initWhenReady();
-    }
-  }
-
   onReady(function () {
     injectStyles();
     renderDock();
-    // initChatOptional(); // <-- enable only if you want universal chat init
   });
 })();
